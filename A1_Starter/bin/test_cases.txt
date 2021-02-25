@@ -9,6 +9,10 @@
 	return y;
  }
 
+int nothing(int x, int y, int z) {
+	return z;
+}
+
  int max4(int w, int x, int y, int z) {
     int t1, t2;
     t1 = max2(w,x);

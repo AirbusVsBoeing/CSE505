@@ -19,7 +19,7 @@ class Program {
 	}
 }
 
-//function -> int id '(' [ pars ] ')' '{' body '}'
+//function -> int id '('  pars  ')' '{' body '}'
 class Function { 
 	String fname; 	// name of the function
 	Pars p;
@@ -31,7 +31,16 @@ class Function {
 		// Fill in code here
 		// Must invoke:  FunTab.add(fname);
 		// Code ends with following two statements:
-
+		
+		Lexer.lex();
+		this.fname = Lexer.ident;
+		FunTab.add(this.fname);
+		Lexer.lex();
+		p = new Pars();
+		Lexer.lex();
+		Lexer.lex();
+		b = new Body();
+		
 		header = "int " + fname + "(" + p.types + ");";
 		return;
 	}
@@ -48,8 +57,26 @@ class Pars {
 			// Must insert each id that is parsed 
 			// into the symbol table using:
 			// SymTab.add(id)
+		
+		Lexer.lex();
+		Lexer.lex();
+		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+		SymTab.add(Lexer.ident);
+		types = types + "int";
+		npars = 1;
+		Lexer.lex();
+		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+		while(Lexer.nextToken == Token.COMMA) {
+			System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+				++npars;
+				types = types + ",int";
+				Lexer.lex();
+				Lexer.lex();
+				SymTab.add(Lexer.ident);
+				Lexer.lex();
+			}
+		}
 	}
-}
 
 // body -> [ decls ] stmts
 class Body { 
@@ -57,7 +84,12 @@ class Body {
 	Stmts s;
 
 	public Body() {
-		// Fill in code here	
+		Lexer.lex();
+		if(Lexer.nextToken == Token.KEY_INT) {
+			d = new Decls();
+		}
+		// TODO: need to implement the rest
+		
 	}
 }
 
