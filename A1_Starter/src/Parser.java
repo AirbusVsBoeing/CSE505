@@ -96,13 +96,12 @@ class Body {
 }
 
 // decls -> int idlist ';'
-class Decls { 
+class Decls {  // done implementing
 	Idlist il;
 
 	public Decls() {
 		Lexer.lex();
 		il = new Idlist();
-		Lexer.lex(); // semicolon
 		
 	}
 }
@@ -139,9 +138,7 @@ class Stmts {
 	Stmts ss;
 
 	public Stmts() { 
-		if(Lexer.nextToken == Token.ID) {
-			s = new Assign();
-		}
+		s = new Stmt();
 	}
 }
 
@@ -149,8 +146,14 @@ class Stmts {
 class Stmt { 
 	Stmt s;
 
-	public Stmt() {
-		// Fill in code here
+	public Stmt() { //TODO: need to implement
+		int token = Lexer.nextToken;
+		switch(token) {
+			case(Token.ID):{
+				s = new Assign();
+			}
+				
+		}
 	}
 
 	public Stmt(int d) {
@@ -164,11 +167,25 @@ class Assign extends Stmt {
 	String id;
 	Expr e;
 
-	public Assign() {
+	public Assign() { //TODO: need to implement
 		super(0); // superclass initialization
 		// Fill in code here.
+		int index = SymTab.index(Lexer.ident);
+		if(index == -1) 
+			System.out.println("Id not in symtab");
+		this.id = Lexer.ident;
+		Lexer.lex();
+		Lexer.lex();
+		e = new Expr();
+		if(index < 4) {
+			ByteCode.gen("istore",index);
+		}
+		else {
+			ByteCode.gen("istore",index);
+			ByteCode.skip(1);
+		}
 		// End with this statement:
-		ByteCode.gen("istore", SymTab.index(id));
+		//ByteCode.gen("istore", SymTab.index(id));
 	}
 }
 
@@ -255,7 +272,13 @@ class Expr {
 	char op;
 
 	public Expr() {
-		// Fill in code here
+		t = new Term();
+		Lexer.lex();
+		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
+			op = Lexer.nextChar;
+			Lexer.lex();
+			e = new Expr();
+		}
 	}
 }
 
