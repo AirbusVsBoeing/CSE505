@@ -26,12 +26,12 @@ class Function {
 	Body b;
 	String header;
 
+	
 	public Function() {
 		
-		// Fill in code here
 		// Must invoke:  FunTab.add(fname);
 		// Code ends with following two statements:
-		
+		// done implementing
 		Lexer.lex();
 		this.fname = Lexer.ident;
 		FunTab.add(this.fname);
@@ -53,21 +53,21 @@ class Pars {
 	int npars = 0;	   // the number of parameters
 
 	public Pars() {
-		 	// Fill in code here
+		 	// done implementing
 			// Must insert each id that is parsed 
 			// into the symbol table using:
 			// SymTab.add(id)
 		
 		Lexer.lex();
 		Lexer.lex();
-		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+		//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 		SymTab.add(Lexer.ident);
 		types = types + "int";
 		npars = 1;
 		Lexer.lex();
-		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+		//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 		while(Lexer.nextToken == Token.COMMA) {
-			System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+			//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 				++npars;
 				types = types + ",int";
 				Lexer.lex();
@@ -84,11 +84,13 @@ class Body {
 	Stmts s;
 
 	public Body() {
-		Lexer.lex();
+		//Lexer.lex();
+		System.out.println(Lexer.nextToken);
 		if(Lexer.nextToken == Token.KEY_INT) {
 			d = new Decls();
 		}
-		// TODO: need to implement the rest
+		Lexer.lex();
+		s = new Stmts();
 		
 	}
 }
@@ -98,7 +100,10 @@ class Decls {
 	Idlist il;
 
 	public Decls() {
-		// Fill in code here
+		Lexer.lex();
+		il = new Idlist();
+		Lexer.lex(); // semicolon
+		
 	}
 }
 
@@ -108,10 +113,23 @@ class Idlist {
 	Idlist il;
 
 	public Idlist() {
-		// Fill in code here
+		// done implementing
 		// Must insert each id that is parsed
 		// into the symbol table using:
 		// SymTab.add(id);
+		this.id = Lexer.ident;
+		SymTab.add(this.id);
+		Lexer.lex();
+		while(Lexer.nextToken == Token.COMMA) {
+			Lexer.lex();
+			this.id = this.id + "," + Lexer.ident;
+			SymTab.add(Lexer.ident);
+			Lexer.lex();
+		}
+		//String[] ids = SymTab.id;
+		//System.out.println("length:" + ids.length);
+		//for(int i=0; i< 6; i++)
+			//System.out.println(ids[i]);
 	}
 }
 
@@ -121,7 +139,9 @@ class Stmts {
 	Stmts ss;
 
 	public Stmts() { 
-		// Fill in code here
+		if(Lexer.nextToken == Token.ID) {
+			s = new Assign();
+		}
 	}
 }
 
