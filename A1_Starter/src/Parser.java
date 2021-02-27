@@ -151,8 +151,12 @@ class Stmt {
 		switch(token) {
 			case(Token.ID):{
 				s = new Assign();
+				break;
 			}
-				
+			case(Token.KEY_IF):{
+				s = new Cond();
+				break;
+			}			
 		}
 	}
 
@@ -177,13 +181,7 @@ class Assign extends Stmt {
 		Lexer.lex();
 		Lexer.lex();
 		e = new Expr();
-		if(index < 4) {
-			ByteCode.gen("istore",index);
-		}
-		else {
-			ByteCode.gen("istore",index);
-			ByteCode.skip(1);
-		}
+		ByteCode.gen("istore",index);
 		// End with this statement:
 		//ByteCode.gen("istore", SymTab.index(id));
 	}
@@ -211,7 +209,7 @@ class Loop extends Stmt {
 
 
 // cond -> if '(' relexp ')' stmt [ else stmt ]
-class Cond extends Stmt { 
+class Cond extends Stmt { //TODO: need to implement this
 	Relexp r;
 	Stmt s1;
 	Stmt s2;
@@ -219,6 +217,18 @@ class Cond extends Stmt {
 		super(0);
 		// Fill in code here.  Refer to
 		// code in class Loop for guidance
+		
+		Lexer.lex();
+		Lexer.lex(); // left paren
+		int boolpoint = ByteCode.str_codeptr;
+		r = new Relexp();
+		Lexer.lex(); // right paren
+		s1 = new Stmt();
+		ByteCode.gen_goto(boolpoint);
+		if(Lexer.nextToken == Token.KEY_ELSE) {
+			Lexer.lex();
+			s2 = new Stmt();
+		}
 	}
 }
 
@@ -261,7 +271,41 @@ class Relexp {
 	String op = "";
 
 	public Relexp() {
-		// Fill in code here
+		e1 = new Expr();
+		int token = Lexer.nextToken;
+		switch(token) {
+			case(Token.LESSER_OP):{
+				Lexer.lex();
+				e2 = new Expr();
+				ByteCode.gen_if("<");
+				break;
+			}
+			case(Token.LESSEQ_OP):{
+				e2 = new Expr();
+				ByteCode.gen_if("<=");
+				break;
+			}
+			case(Token.GREATER_OP):{
+				e2 = new Expr();
+				ByteCode.gen_if(">");
+				break;
+			}
+			case(Token.GREATEREQ_OP):{
+				e2 = new Expr();
+				ByteCode.gen_if(">=");
+				break;
+			}
+			case(Token.EQ_OP):{
+				e2 = new Expr();
+				ByteCode.gen_if("==");
+				break;
+			}
+			case(Token.NOT_EQ):{
+				e2 = new Expr();
+				ByteCode.gen_if("!=");
+				break;
+			}
+		}
 	}
 }
 
@@ -289,7 +333,13 @@ class Term {
 	char op;
 
 	public Term() {
-		// Fill in code here
+		f = new Factor();
+		Lexer.lex();
+		if(Lexer.nextChar == '*' || Lexer.nextChar == '/') {
+			op = Lexer.nextChar;
+			Lexer.lex();
+			t = new Term();
+		}
 	}
 }
 
@@ -301,7 +351,34 @@ class Factor {
 	Expr e;
 	
 	public Factor() {
-		// Fill in code here
+		int token = Lexer.nextToken;
+		switch(token) {
+			case(Token.INT_LIT):{ //TODO: bytecode generation -- not sure
+				i = token;
+				Lexer.lex(); 
+				break;
+			}
+			case(Token.ID):{
+				this.id = Lexer.ident;
+				int index = SymTab.index(this.id);
+				if(index< 0)
+					System.out.println("id not recognized");
+				ByteCode.gen("iload", index);
+				Lexer.lex();
+				break;
+			}
+			case(Token.LEFT_PAREN):{
+				Lexer.lex();
+				e = new Expr();
+				Lexer.lex();
+				break;
+			}
+			default:{
+				fc = new Funcall(Lexer.ident);
+				Lexer.lex();
+				break;
+			}
+		}
 	}
 }
 
@@ -328,6 +405,12 @@ class ExprList {
 	ExprList el;
 
 	public ExprList() {
-		// Fill in code here
+		e = new Expr();
+		Lexer.lex();
+		while(Lexer.nextToken == Token.COMMA) {
+			Lexer.lex();
+			el = new ExprList();
+			Lexer.lex();
+		}
 	}
 }
