@@ -149,14 +149,22 @@ class Stmt {
 	public Stmt() { //TODO: need to implement
 		int token = Lexer.nextToken;
 		switch(token) {
-			case(Token.ID):{
+			case Token.ID:{
 				s = new Assign();
 				break;
 			}
-			case(Token.KEY_IF):{
+			case Token.KEY_IF:{
 				s = new Cond();
 				break;
-			}			
+			}
+			case Token.KEY_WHILE:{
+				s = new Loop();
+				break;
+			}
+			case Token.LEFT_BRACE:{
+				s = new Cmpd();
+				break;
+			}
 		}
 	}
 
@@ -274,33 +282,33 @@ class Relexp {
 		e1 = new Expr();
 		int token = Lexer.nextToken;
 		switch(token) {
-			case(Token.LESSER_OP):{
+			case Token.LESSER_OP:{
 				Lexer.lex();
 				e2 = new Expr();
 				ByteCode.gen_if("<");
 				break;
 			}
-			case(Token.LESSEQ_OP):{
+			case Token.LESSEQ_OP:{
 				e2 = new Expr();
 				ByteCode.gen_if("<=");
 				break;
 			}
-			case(Token.GREATER_OP):{
+			case Token.GREATER_OP:{
 				e2 = new Expr();
 				ByteCode.gen_if(">");
 				break;
 			}
-			case(Token.GREATEREQ_OP):{
+			case Token.GREATEREQ_OP:{
 				e2 = new Expr();
 				ByteCode.gen_if(">=");
 				break;
 			}
-			case(Token.EQ_OP):{
+			case Token.EQ_OP:{
 				e2 = new Expr();
 				ByteCode.gen_if("==");
 				break;
 			}
-			case(Token.NOT_EQ):{
+			case Token.NOT_EQ:{
 				e2 = new Expr();
 				ByteCode.gen_if("!=");
 				break;
@@ -353,12 +361,12 @@ class Factor {
 	public Factor() {
 		int token = Lexer.nextToken;
 		switch(token) {
-			case(Token.INT_LIT):{ //TODO: bytecode generation -- not sure
-				i = token;
+			case Token.INT_LIT:{ //TODO: bytecode generation -- not sure
+				i = Lexer.intValue;
 				Lexer.lex(); 
 				break;
 			}
-			case(Token.ID):{
+			case Token.ID:{
 				this.id = Lexer.ident;
 				int index = SymTab.index(this.id);
 				if(index< 0)
@@ -367,7 +375,7 @@ class Factor {
 				Lexer.lex();
 				break;
 			}
-			case(Token.LEFT_PAREN):{
+			case Token.LEFT_PAREN:{
 				Lexer.lex();
 				e = new Expr();
 				Lexer.lex();
