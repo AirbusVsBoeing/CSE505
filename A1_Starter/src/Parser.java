@@ -155,6 +155,7 @@ class Stmt {
 
 	public Stmt() { //TODO: need to implement
 		int token = Lexer.nextToken;
+		System.out.println("Token:" + token);
 		switch(token) {
 			case Token.ID:{
 				s = new Assign();
@@ -172,7 +173,14 @@ class Stmt {
 				s = new Cmpd();
 				break;
 			}
-			default: { break;}
+			case Token.KEY_RETURN:{
+				s = new Return();
+				break;
+			}
+			case Token.KEY_PRINT:{
+				s = new Print();
+				break;
+			}
 		}
 	}
 
@@ -269,10 +277,8 @@ class Return extends Stmt {
 	public Return() {
 		super(0);
 		// Fill in code here.  
-		
-		e = new Expr();
 		Lexer.lex();
-		
+		e = new Expr();
 		// End with:
 		ByteCode.gen_return();
 	}
@@ -285,6 +291,8 @@ class Print extends Stmt {
 	public Print() {
 		super(0);
 		// Fill in code here.  End with:
+		Lexer.lex();
+		e = new Expr();
 		ByteCode.gen_print();
 	}
 }
@@ -358,6 +366,7 @@ class Expr {
 			op = Lexer.nextChar;
 			Lexer.lex();
 			e = new Expr();
+			ByteCode.gen(op);
 		}
 	}
 }
@@ -375,6 +384,7 @@ class Term {
 			op = Lexer.nextChar;
 			Lexer.lex();
 			t = new Term();
+			ByteCode.gen(op);
 		}
 	}
 }
@@ -392,6 +402,7 @@ class Factor {
 			case Token.INT_LIT:{ //TODO: bytecode generation -- not sure
 				i = Lexer.intValue;
 				Lexer.lex(); 
+				Code.gen(Code.intcode(i));
 				break;
 			}
 			case Token.ID:{
@@ -448,5 +459,23 @@ class ExprList {
 			el = new ExprList();
 			Lexer.lex();
 		}
+	}
+}
+
+class Code{
+	
+	public static void gen(String s) {
+		ByteCode.code[ByteCode.codeptr] = s;
+		ByteCode.codeptr++;
+		
+		ByteCode.str_code[ByteCode.str_codeptr] = s;
+		ByteCode.str_codeptr++;
+	}
+	
+	
+	public static String intcode(int i) {
+		if (i > 127) return "sipush " + i;
+		if (i > 5) return "bipush " + i;
+		return "iconst_" + i;
 	}
 }
