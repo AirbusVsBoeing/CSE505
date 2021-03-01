@@ -85,7 +85,7 @@ class Body {
 
 	public Body() {
 		//Lexer.lex();
-		System.out.println(Lexer.nextToken);
+		//System.out.println(Lexer.nextToken);
 		if(Lexer.nextToken == Token.KEY_INT) {
 			d = new Decls();
 		}
@@ -139,6 +139,13 @@ class Stmts {
 
 	public Stmts() { 
 		s = new Stmt();
+		//System.out.println("nextToken: "+Lexer.nextToken);
+		if(Lexer.nextToken == Token.ID||
+				Lexer.nextToken == Token.LEFT_BRACE||
+				Lexer.nextToken == Token.KEY_IF||
+				Lexer.nextToken == Token.KEY_WHILE){
+			ss = new Stmts();
+		}
 	}
 }
 
@@ -165,6 +172,7 @@ class Stmt {
 				s = new Cmpd();
 				break;
 			}
+			default: { break;}
 		}
 	}
 
@@ -190,6 +198,7 @@ class Assign extends Stmt {
 		Lexer.lex();
 		e = new Expr();
 		ByteCode.gen("istore",index);
+		Lexer.lex();
 		// End with this statement:
 		//ByteCode.gen("istore", SymTab.index(id));
 	}
@@ -247,6 +256,9 @@ class Cmpd extends Stmt {
 	public Cmpd() {
 		super(0);
 		// Fill in code here
+		Lexer.lex();
+		s = new Stmts();
+		Lexer.lex();
 	}
 }
 
@@ -256,7 +268,12 @@ class Return extends Stmt {
 
 	public Return() {
 		super(0);
-		// Fill in code here.  End with:
+		// Fill in code here.  
+		
+		e = new Expr();
+		Lexer.lex();
+		
+		// End with:
 		ByteCode.gen_return();
 	}
 }
@@ -285,32 +302,43 @@ class Relexp {
 			case Token.LESSER_OP:{
 				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if("<");
+				op = "<";
+				ByteCode.gen_if(op);
 				break;
 			}
 			case Token.LESSEQ_OP:{
+				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if("<=");
+				op = "<=";
+				ByteCode.gen_if(op);
 				break;
 			}
 			case Token.GREATER_OP:{
+				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if(">");
+				op = ">";
+				ByteCode.gen_if(op);
 				break;
 			}
 			case Token.GREATEREQ_OP:{
+				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if(">=");
+				op = ">=";
+				ByteCode.gen_if(op);
 				break;
 			}
 			case Token.EQ_OP:{
+				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if("==");
+				op = "==";
+				ByteCode.gen_if(op);
 				break;
 			}
 			case Token.NOT_EQ:{
+				Lexer.lex();
 				e2 = new Expr();
-				ByteCode.gen_if("!=");
+				op="!=";
+				ByteCode.gen_if(op);
 				break;
 			}
 		}
@@ -325,7 +353,7 @@ class Expr {
 
 	public Expr() {
 		t = new Term();
-		Lexer.lex();
+		// Lexer.lex();
 		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
 			op = Lexer.nextChar;
 			Lexer.lex();
@@ -342,7 +370,7 @@ class Term {
 
 	public Term() {
 		f = new Factor();
-		Lexer.lex();
+		// Lexer.lex();
 		if(Lexer.nextChar == '*' || Lexer.nextChar == '/') {
 			op = Lexer.nextChar;
 			Lexer.lex();
