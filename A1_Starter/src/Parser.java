@@ -143,7 +143,9 @@ class Stmts {
 		if(Lexer.nextToken == Token.ID||
 				Lexer.nextToken == Token.LEFT_BRACE||
 				Lexer.nextToken == Token.KEY_IF||
-				Lexer.nextToken == Token.KEY_WHILE){
+				Lexer.nextToken == Token.KEY_WHILE||
+				Lexer.nextToken == Token.KEY_RETURN||
+				Lexer.nextToken == Token.KEY_PRINT){
 			ss = new Stmts();
 		}
 	}
@@ -244,16 +246,22 @@ class Cond extends Stmt { //TODO: need to implement this
 		// code in class Loop for guidance
 		
 		Lexer.lex();
-		Lexer.lex(); // left paren
-		int boolpoint = ByteCode.str_codeptr;
-		r = new Relexp();
-		Lexer.lex(); // right paren
+		Lexer.lex();
+		r = new Relexp(); // takes 1 byte
+		Lexer.lex();
+		int n1 = ByteCode.str_codeptr,n2=ByteCode.str_codeptr;
 		s1 = new Stmt();
-		ByteCode.gen_goto(boolpoint);
-		if(Lexer.nextToken == Token.KEY_ELSE) {
+		
+		if(Lexer.nextToken == Token.KEY_ELSE){
+			ByteCode.gen_goto(n1);
+			ByteCode.skip(2); // ptr - start of ELSE
 			Lexer.lex();
+			n1 = ByteCode.codeptr;
+			ByteCode.gen_goto(n2);
+			ByteCode.skip(2);
 			s2 = new Stmt();
 		}
+	//	else ByteCode.codeptr[n2] = ByteCode.codeptr[n2] + ByteCode.codeptr[n2];
 	}
 }
 
@@ -410,14 +418,23 @@ class Factor {
 				int index = SymTab.index(this.id);
 				if(index< 0)
 					System.out.println("id not recognized");
-				ByteCode.gen("iload", index);
+				
+				
 				Lexer.lex();
+				if(Lexer.nextToken == Token.LEFT_PAREN) {
+					Lexer.lex();
+					fc = new Funcall(id);
+				}
+				else
+					ByteCode.gen("iload", index);
+				
 				break;
 			}
 			case Token.LEFT_PAREN:{
 				Lexer.lex();
 				e = new Expr();
 				Lexer.lex();
+				
 				break;
 			}
 			default:{
