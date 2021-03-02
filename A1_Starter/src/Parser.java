@@ -165,6 +165,7 @@ class Stmt {
 			case Token.ID:{
 				s = new Assign();
 				Lexer.lex(); // skip semicolon
+		//		System.out.println("assigning done, nextToken:" + Lexer.nextToken);
 				break;
 			}
 			case Token.KEY_IF:{
@@ -211,7 +212,7 @@ class Assign extends Stmt {
 		Lexer.lex(); // '='
 		Lexer.lex(); 
 		e = new Expr();
-		ByteCode.gen("istore",index);
+		ByteCode.gen("istore",index); // for post fix
 		//Lexer.lex(); moved to Stmt
 		// End with this statement:
 		//ByteCode.gen("istore", SymTab.index(id));
@@ -261,11 +262,11 @@ class Cond extends Stmt { //TODO: need to implement this
 		
 		if(Lexer.nextToken == Token.KEY_ELSE){
 			Lexer.lex(); // skip else
-			int current = ByteCode.str_codeptr;
 			//ByteCode.patch(else_start, current);
-			ret_add =current;
+			//ret_add =current;
 			ByteCode.gen_goto(-2); // add goto 
 			ByteCode.skip(2); // for goto ret_add
+			ret_add = ByteCode.str_codeptr;
 			//Lexer.lex();
 			ByteCode.patch(else_start, ByteCode.str_codeptr);
 			s2 = new Stmt();
@@ -330,7 +331,7 @@ class Relexp {
 
 	public Relexp() {
 		e1 = new Expr();
-		//Lexer.lex(); // added now
+		// don't need to lex here -- because  we lexed in factor
 		int token = Lexer.nextToken;
 		switch(token) {
 			case Token.LESSER_OP:{
@@ -355,7 +356,7 @@ class Relexp {
 				break;
 			}
 			case Token.GREATEREQ_OP:{
-				Lexer.lex();
+			//	Lexer.lex();
 				e2 = new Expr();
 				op = ">=";
 				ByteCode.gen_if(op);
@@ -434,16 +435,18 @@ class Factor {
 			case Token.ID:{
 				this.id = Lexer.ident;
 				int index = SymTab.index(this.id);
-				if(index< 0)
-					System.out.println("id not recognized");
-				
-				
-				Lexer.lex();
-				if(Lexer.nextToken == Token.LEFT_PAREN) {
-					Lexer.lex();
-					fc = new Funcall(id);
+				if(index< 0) {
+					index = FunTab.index(this.id);
+					if(index < 0) 
+						System.out.println("id not recognized");
+					fc = new Funcall(this.id);
 				}
-				else
+				Lexer.lex();
+				//if(Lexer.nextToken == Token.LEFT_PAREN) {
+				//	Lexer.lex();
+				//	fc = new Funcall(id);
+				//}
+				//else
 					ByteCode.gen("iload", index);
 				
 				break;
