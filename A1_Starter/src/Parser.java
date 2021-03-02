@@ -32,14 +32,15 @@ class Function {
 		// Must invoke:  FunTab.add(fname);
 		// Code ends with following two statements:
 		// done implementing
-		Lexer.lex();
+		Lexer.lex(); // skip int
 		this.fname = Lexer.ident;
 		FunTab.add(this.fname);
-		Lexer.lex();
+		Lexer.lex(); // skip '('
 		p = new Pars();
-		Lexer.lex();
-		Lexer.lex();
+		Lexer.lex(); // skip ')'
+		Lexer.lex(); // skip '{'
 		b = new Body();
+		Lexer.lex(); // skip '}'
 		
 		header = "int " + fname + "(" + p.types + ");";
 		return;
@@ -89,7 +90,7 @@ class Body {
 		if(Lexer.nextToken == Token.KEY_INT) {
 			d = new Decls();
 		}
-		Lexer.lex();
+		//Lexer.lex(); changed now?
 		s = new Stmts();
 		
 	}
@@ -100,8 +101,9 @@ class Decls {  // done implementing
 	Idlist il;
 
 	public Decls() {
-		Lexer.lex();
+		Lexer.lex(); // int
 		il = new Idlist();
+		Lexer.lex();
 		
 	}
 }
@@ -121,7 +123,8 @@ class Idlist {
 		Lexer.lex();
 		while(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
-			this.id = this.id + "," + Lexer.ident;
+			this.id = this.id + "," + Lexer.ident; // this is only so that it shoes in the parse tree
+			//this.id = Lexer.ident; // new id
 			SymTab.add(Lexer.ident);
 			Lexer.lex();
 		}
@@ -155,12 +158,13 @@ class Stmts {
 class Stmt { 
 	Stmt s;
 
-	public Stmt() { //TODO: need to implement
+	public Stmt() { //done implementing
 		int token = Lexer.nextToken;
-		System.out.println("Token:" + token);
+		//System.out.println("Token:" + token);
 		switch(token) {
 			case Token.ID:{
 				s = new Assign();
+				Lexer.lex(); // skip semicolon
 				break;
 			}
 			case Token.KEY_IF:{
@@ -203,12 +207,12 @@ class Assign extends Stmt {
 		int index = SymTab.index(Lexer.ident);
 		if(index == -1) 
 			System.out.println("Id not in symtab");
-		this.id = Lexer.ident;
-		Lexer.lex();
-		Lexer.lex();
+		this.id = Lexer.ident; //id
+		Lexer.lex(); // '='
+		Lexer.lex(); 
 		e = new Expr();
 		ByteCode.gen("istore",index);
-		Lexer.lex();
+		//Lexer.lex(); moved to Stmt
 		// End with this statement:
 		//ByteCode.gen("istore", SymTab.index(id));
 	}
@@ -245,23 +249,36 @@ class Cond extends Stmt { //TODO: need to implement this
 		// Fill in code here.  Refer to
 		// code in class Loop for guidance
 		
-		Lexer.lex();
-		Lexer.lex();
-		r = new Relexp(); // takes 1 byte
-		Lexer.lex();
-		int n1 = ByteCode.str_codeptr,n2=ByteCode.str_codeptr;
+		Lexer.lex(); // if
+		Lexer.lex(); // '('
+		r = new Relexp(); // takes some number of bytes -- can't say
+		Lexer.lex(); // lex ')'
+		//int n1 = ByteCode.str_codeptr,n2=ByteCode.str_codeptr;
+		int else_start = ByteCode.skip(3); // for else_start 
+		int ret_add = 0;
 		s1 = new Stmt();
+		Lexer.lex();
 		
 		if(Lexer.nextToken == Token.KEY_ELSE){
-			ByteCode.gen_goto(n1);
-			ByteCode.skip(2); // ptr - start of ELSE
-			Lexer.lex();
-			n1 = ByteCode.codeptr;
-			ByteCode.gen_goto(n2);
-			ByteCode.skip(2);
+			Lexer.lex(); // skip else
+			int current = ByteCode.str_codeptr;
+			//ByteCode.patch(else_start, current);
+			ret_add =current;
+			ByteCode.gen_goto(-2); // add goto 
+			ByteCode.skip(2); // for goto ret_add
+			//Lexer.lex();
+			ByteCode.patch(else_start, ByteCode.str_codeptr);
 			s2 = new Stmt();
+			Lexer.lex(); // maybe '}' or return
+		
+				//Lexer.lex();
+			//System.out.println("should be return: " + Lexer.nextToken);
+			ByteCode.patch(ret_add, ByteCode.str_codeptr);
+			//if(Lexer.nextToken == Token.RIGHT_BRACE)
+			//	System.out.println("NO OP");
+			//ByteCode.skip(2);
 		}
-	//	else ByteCode.codeptr[n2] = ByteCode.codeptr[n2] + ByteCode.codeptr[n2];
+		else ByteCode.patch(else_start, ByteCode.str_codeptr);
 	}
 }
 
@@ -272,9 +289,9 @@ class Cmpd extends Stmt {
 	public Cmpd() {
 		super(0);
 		// Fill in code here
-		Lexer.lex();
+		Lexer.lex(); // skip '{'
 		s = new Stmts();
-		Lexer.lex();
+		Lexer.lex(); // skip '}'
 	}
 }
 
@@ -285,7 +302,7 @@ class Return extends Stmt {
 	public Return() {
 		super(0);
 		// Fill in code here.  
-		Lexer.lex();
+		Lexer.lex(); // skip return
 		e = new Expr();
 		// End with:
 		ByteCode.gen_return();
@@ -299,7 +316,7 @@ class Print extends Stmt {
 	public Print() {
 		super(0);
 		// Fill in code here.  End with:
-		Lexer.lex();
+		Lexer.lex(); // skip print
 		e = new Expr();
 		ByteCode.gen_print();
 	}
@@ -313,6 +330,7 @@ class Relexp {
 
 	public Relexp() {
 		e1 = new Expr();
+		//Lexer.lex(); // added now
 		int token = Lexer.nextToken;
 		switch(token) {
 			case Token.LESSER_OP:{
@@ -371,8 +389,8 @@ class Expr {
 		t = new Term();
 		// Lexer.lex();
 		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
-			op = Lexer.nextChar;
-			Lexer.lex();
+			op = Lexer.nextChar; 
+			Lexer.lex(); // skip + or -
 			e = new Expr();
 			ByteCode.gen(op);
 		}
