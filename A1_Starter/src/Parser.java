@@ -168,7 +168,9 @@ class Stmt {
 			}
 			case Token.KEY_RETURN:{
 				s = new Return();
+				System.out.println("RETURN NEXT1:" + Lexer.nextToken);
 				Lexer.lex();
+				System.out.println("RETURN NEXT2:" + Lexer.nextToken);
 				break;
 			}
 			case Token.KEY_PRINT:{
@@ -474,10 +476,10 @@ class ExprList {
 		e = new Expr();
 		//Lexer.lex(); // skip ','
 		System.out.println(Lexer.nextToken);
-		while(Lexer.nextToken == Token.COMMA) {
+		if(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
 			el = new ExprList();
-			Lexer.lex();
+		//	Lexer.lex();
 		}
 	}
 }
