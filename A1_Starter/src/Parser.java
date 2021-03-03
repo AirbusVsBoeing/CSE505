@@ -59,8 +59,8 @@ class Pars {
 			// into the symbol table using:
 			// SymTab.add(id)
 		
-		Lexer.lex();
-		Lexer.lex();
+		Lexer.lex(); // skip int
+		Lexer.lex(); // get token for id
 		SymTab.add(Lexer.ident);
 		types = types + "int";
 		npars = 1;
@@ -68,8 +68,8 @@ class Pars {
 		while(Lexer.nextToken == Token.COMMA) {
 				++npars;
 				types = types + ",int";
-				Lexer.lex();
-				Lexer.lex();
+				Lexer.lex(); // at int
+				Lexer.lex(); // at id
 				SymTab.add(Lexer.ident);
 				Lexer.lex();
 			}
@@ -261,12 +261,7 @@ class Cond extends Stmt { //TODO: need to implement this
 		}
 		else 
 			ByteCode.patch(else_start, ByteCode.str_codeptr);
-//		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
-		
-		//Lexer.lex();
-		//Lexer.lex();
-		
-//		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+
 	}
 
 }
@@ -420,17 +415,20 @@ class Factor {
 			case Token.ID:{
 				this.id = Lexer.ident;
 				int index = SymTab.index(this.id);
-				System.out.println(index);
-				if(index< 0) {
+				//System.out.println(index);
+				if(index< 0) { // means funcall
+				//	System.out.println("ID:" + this.id);
 					index = FunTab.index(this.id);
-					if(index < 0) 
-						System.out.println("id not recognized");
 					fc = new Funcall(this.id);
+					//Lexer.lex();
+					break;
 				}
-				Lexer.lex();
-				ByteCode.gen("iload", index);
-				
-				break;
+				else {
+				//	System.out.println("SID:" + this.id);
+					Lexer.lex();
+					ByteCode.gen("iload", index);
+					break;
+				}
 			}
 			case Token.LEFT_PAREN:{
 				Lexer.lex();
@@ -473,7 +471,7 @@ class ExprList {
 	public ExprList() {
 		e = new Expr();
 		Lexer.lex(); // skip ','
-		System.out.println(Lexer.nextToken);
+	//	System.out.println(Lexer.nextToken);
 		while(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
 			el = new ExprList();
