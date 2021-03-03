@@ -370,6 +370,7 @@ class Expr {
 
 	public Expr() {
 		t = new Term();
+		System.out.println("Next-Expr:" + Lexer.nextToken);
 		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
 			op = Lexer.nextChar; 
 			Lexer.lex(); // skip + or -
@@ -419,6 +420,7 @@ class Factor {
 				if(index< 0) { // means funcall
 				//	System.out.println("ID:" + this.id);
 					index = FunTab.index(this.id);
+					Lexer.lex();
 					fc = new Funcall(this.id);
 					//Lexer.lex();
 					break;
@@ -426,6 +428,7 @@ class Factor {
 				else {
 				//	System.out.println("SID:" + this.id);
 					Lexer.lex();
+					System.out.println("Next in ID:" + Lexer.nextToken);
 					ByteCode.gen("iload", index);
 					break;
 				}
@@ -434,12 +437,7 @@ class Factor {
 				Lexer.lex();
 				e = new Expr();
 				Lexer.lex();
-				
-				break;
-			}
-			default:{
-				fc = new Funcall(Lexer.ident);
-				Lexer.lex();
+				//Lexer.lex(); // added saffron
 				break;
 			}
 		}
@@ -452,9 +450,11 @@ class Funcall {
 	ExprList el;
 
 	public Funcall(String id) {
+		//System.out.println("See here: " + Lexer.nextToken);
 		this.id = id;
 		Lexer.lex(); // (
 		ByteCode.gen("aload", 0);
+		System.out.println("See this: " + Lexer.nextToken);
 		el = new ExprList();
 		Lexer.lex(); // skip over the )
 		int funid = FunTab.index(id);
@@ -469,9 +469,11 @@ class ExprList {
 	ExprList el;
 
 	public ExprList() {
+		//Lexer.lex();
+		System.out.println("Next here:" + Lexer.nextToken);
 		e = new Expr();
-		Lexer.lex(); // skip ','
-	//	System.out.println(Lexer.nextToken);
+		//Lexer.lex(); // skip ','
+		System.out.println(Lexer.nextToken);
 		while(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
 			el = new ExprList();
