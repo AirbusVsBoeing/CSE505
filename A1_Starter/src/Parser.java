@@ -10,9 +10,9 @@ class Program {
 			ByteCode.initialize(); // initialize for every function parsed
 
 			Function f = new Function();
-
+			
 			ByteCode.output(f.header);
-
+			
 			Interpreter.initialize(f.fname, SymTab.idptr - 1, f.p.npars, ByteCode.code, ByteCode.arg, ByteCode.codeptr);
 		}
 		FunTab.output();
@@ -61,14 +61,11 @@ class Pars {
 		
 		Lexer.lex();
 		Lexer.lex();
-		//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 		SymTab.add(Lexer.ident);
 		types = types + "int";
 		npars = 1;
 		Lexer.lex();
-		//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 		while(Lexer.nextToken == Token.COMMA) {
-			//System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 				++npars;
 				types = types + ",int";
 				Lexer.lex();
@@ -85,12 +82,9 @@ class Body {
 	Stmts s;
 
 	public Body() {
-		//Lexer.lex();
-		//System.out.println(Lexer.nextToken);
 		if(Lexer.nextToken == Token.KEY_INT) {
 			d = new Decls();
 		}
-		//Lexer.lex(); changed now?
 		s = new Stmts();
 		
 	}
@@ -123,15 +117,10 @@ class Idlist {
 		Lexer.lex();
 		while(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
-			this.id = this.id + "," + Lexer.ident; // this is only so that it shoes in the parse tree
-			//this.id = Lexer.ident; // new id
+			this.id = this.id + "," + Lexer.ident; 
 			SymTab.add(Lexer.ident);
 			Lexer.lex();
 		}
-		//String[] ids = SymTab.id;
-		//System.out.println("length:" + ids.length);
-		//for(int i=0; i< 6; i++)
-			//System.out.println(ids[i]);
 	}
 }
 
@@ -142,7 +131,6 @@ class Stmts {
 
 	public Stmts() { 
 		s = new Stmt();
-		//System.out.println("nextToken: "+Lexer.nextToken);
 		if(Lexer.nextToken == Token.ID||
 				Lexer.nextToken == Token.LEFT_BRACE||
 				Lexer.nextToken == Token.KEY_IF||
@@ -160,12 +148,10 @@ class Stmt {
 
 	public Stmt() { //done implementing
 		int token = Lexer.nextToken;
-		//System.out.println("Token:" + token);
 		switch(token) {
 			case Token.ID:{
 				s = new Assign();
-				Lexer.lex(); // skip semicolon
-		//		System.out.println("assigning done, nextToken:" + Lexer.nextToken);
+				Lexer.lex();
 				break;
 			}
 			case Token.KEY_IF:{
@@ -182,10 +168,12 @@ class Stmt {
 			}
 			case Token.KEY_RETURN:{
 				s = new Return();
+				Lexer.lex();
 				break;
 			}
 			case Token.KEY_PRINT:{
 				s = new Print();
+				Lexer.lex();
 				break;
 			}
 		}
@@ -213,9 +201,6 @@ class Assign extends Stmt {
 		Lexer.lex(); 
 		e = new Expr();
 		ByteCode.gen("istore",index); // for post fix
-		//Lexer.lex(); moved to Stmt
-		// End with this statement:
-		//ByteCode.gen("istore", SymTab.index(id));
 	}
 }
 
@@ -250,37 +235,40 @@ class Cond extends Stmt { //TODO: need to implement this
 		// Fill in code here.  Refer to
 		// code in class Loop for guidance
 		
-		Lexer.lex(); // if
-		Lexer.lex(); // '('
+		Lexer.lex(); // skip if
+		Lexer.lex(); // skip '('
 		r = new Relexp(); // takes some number of bytes -- can't say
-		Lexer.lex(); // lex ')'
-		//int n1 = ByteCode.str_codeptr,n2=ByteCode.str_codeptr;
+		Lexer.lex(); // skip ')'
 		int else_start = ByteCode.skip(3); // for else_start 
 		int ret_add = 0;
 		s1 = new Stmt();
-		Lexer.lex();
+		
+		//Lexer.lex();
 		
 		if(Lexer.nextToken == Token.KEY_ELSE){
+			
 			Lexer.lex(); // skip else
-			//ByteCode.patch(else_start, current);
-			//ret_add =current;
+			
+			ret_add = ByteCode.codeptr;
 			ByteCode.gen_goto(-2); // add goto 
 			ByteCode.skip(2); // for goto ret_add
-			ret_add = ByteCode.str_codeptr;
-			//Lexer.lex();
 			ByteCode.patch(else_start, ByteCode.str_codeptr);
 			s2 = new Stmt();
-			Lexer.lex(); // maybe '}' or return
-		
-				//Lexer.lex();
-			//System.out.println("should be return: " + Lexer.nextToken);
+			
+		//	Lexer.lex(); // maybe '}' or return
+			
 			ByteCode.patch(ret_add, ByteCode.str_codeptr);
-			//if(Lexer.nextToken == Token.RIGHT_BRACE)
-			//	System.out.println("NO OP");
-			//ByteCode.skip(2);
 		}
-		else ByteCode.patch(else_start, ByteCode.str_codeptr);
+		else 
+			ByteCode.patch(else_start, ByteCode.str_codeptr);
+//		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
+		
+		//Lexer.lex();
+		//Lexer.lex();
+		
+//		System.out.println("Lexer.nextToken:" + Lexer.nextToken);
 	}
+
 }
 
 // cmpd -> '{' stmts '}'
@@ -356,7 +344,6 @@ class Relexp {
 				break;
 			}
 			case Token.GREATEREQ_OP:{
-			//	Lexer.lex();
 				e2 = new Expr();
 				op = ">=";
 				ByteCode.gen_if(op);
@@ -388,7 +375,6 @@ class Expr {
 
 	public Expr() {
 		t = new Term();
-		// Lexer.lex();
 		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
 			op = Lexer.nextChar; 
 			Lexer.lex(); // skip + or -
@@ -406,7 +392,6 @@ class Term {
 
 	public Term() {
 		f = new Factor();
-		// Lexer.lex();
 		if(Lexer.nextChar == '*' || Lexer.nextChar == '/') {
 			op = Lexer.nextChar;
 			Lexer.lex();
@@ -435,6 +420,7 @@ class Factor {
 			case Token.ID:{
 				this.id = Lexer.ident;
 				int index = SymTab.index(this.id);
+				System.out.println(index);
 				if(index< 0) {
 					index = FunTab.index(this.id);
 					if(index < 0) 
@@ -442,12 +428,7 @@ class Factor {
 					fc = new Funcall(this.id);
 				}
 				Lexer.lex();
-				//if(Lexer.nextToken == Token.LEFT_PAREN) {
-				//	Lexer.lex();
-				//	fc = new Funcall(id);
-				//}
-				//else
-					ByteCode.gen("iload", index);
+				ByteCode.gen("iload", index);
 				
 				break;
 			}
@@ -491,7 +472,8 @@ class ExprList {
 
 	public ExprList() {
 		e = new Expr();
-		Lexer.lex();
+		Lexer.lex(); // skip ','
+		System.out.println(Lexer.nextToken);
 		while(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
 			el = new ExprList();
