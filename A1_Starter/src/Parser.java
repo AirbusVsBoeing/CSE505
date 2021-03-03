@@ -34,6 +34,7 @@ class Function {
 		// done implementing
 		Lexer.lex(); // skip int
 		this.fname = Lexer.ident;
+		System.out.println("fname: "+this.fname);
 		FunTab.add(this.fname);
 		Lexer.lex(); // skip '('
 		p = new Pars();
@@ -168,9 +169,7 @@ class Stmt {
 			}
 			case Token.KEY_RETURN:{
 				s = new Return();
-				System.out.println("RETURN NEXT1:" + Lexer.nextToken);
 				Lexer.lex();
-				System.out.println("RETURN NEXT2:" + Lexer.nextToken);
 				break;
 			}
 			case Token.KEY_PRINT:{
@@ -245,8 +244,6 @@ class Cond extends Stmt { //TODO: need to implement this
 		int ret_add = 0;
 		s1 = new Stmt();
 		
-		//Lexer.lex();
-		
 		if(Lexer.nextToken == Token.KEY_ELSE){
 			
 			Lexer.lex(); // skip else
@@ -256,8 +253,6 @@ class Cond extends Stmt { //TODO: need to implement this
 			ByteCode.skip(2); // for goto ret_add
 			ByteCode.patch(else_start, ByteCode.str_codeptr);
 			s2 = new Stmt();
-			
-		//	Lexer.lex(); // maybe '}' or return
 			
 			ByteCode.patch(ret_add, ByteCode.str_codeptr);
 		}
@@ -316,7 +311,6 @@ class Relexp {
 
 	public Relexp() {
 		e1 = new Expr();
-		// don't need to lex here -- because  we lexed in factor
 		int token = Lexer.nextToken;
 		switch(token) {
 			case Token.LESSER_OP:{
@@ -372,7 +366,6 @@ class Expr {
 
 	public Expr() {
 		t = new Term();
-		System.out.println("Next-Expr:" + Lexer.nextToken);
 		if(Lexer.nextChar == '+' || Lexer.nextChar == '-') {
 			op = Lexer.nextChar; 
 			Lexer.lex(); // skip + or -
@@ -409,7 +402,7 @@ class Factor {
 	public Factor() {
 		int token = Lexer.nextToken;
 		switch(token) {
-			case Token.INT_LIT:{ //TODO: bytecode generation -- not sure
+			case Token.INT_LIT:{ 
 				i = Lexer.intValue;
 				Lexer.lex(); 
 				Code.gen(Code.intcode(i));
@@ -418,19 +411,15 @@ class Factor {
 			case Token.ID:{
 				this.id = Lexer.ident;
 				int index = SymTab.index(this.id);
-				//System.out.println(index);
 				if(index< 0) { // means funcall
-				//	System.out.println("ID:" + this.id);
 					index = FunTab.index(this.id);
 					Lexer.lex();
 					fc = new Funcall(this.id);
-					//Lexer.lex();
 					break;
 				}
 				else {
 				//	System.out.println("SID:" + this.id);
 					Lexer.lex();
-					System.out.println("Next in ID:" + Lexer.nextToken);
 					ByteCode.gen("iload", index);
 					break;
 				}
@@ -439,7 +428,6 @@ class Factor {
 				Lexer.lex();
 				e = new Expr();
 				Lexer.lex();
-				//Lexer.lex(); // added saffron
 				break;
 			}
 		}
@@ -456,7 +444,6 @@ class Funcall {
 		this.id = id;
 		Lexer.lex(); // (
 		ByteCode.gen("aload", 0);
-		System.out.println("See this: " + Lexer.nextToken);
 		el = new ExprList();
 		Lexer.lex(); // skip over the )
 		int funid = FunTab.index(id);
@@ -471,15 +458,10 @@ class ExprList {
 	ExprList el;
 
 	public ExprList() {
-		//Lexer.lex();
-		System.out.println("Next here:" + Lexer.nextToken);
 		e = new Expr();
-		//Lexer.lex(); // skip ','
-		System.out.println(Lexer.nextToken);
 		if(Lexer.nextToken == Token.COMMA) {
 			Lexer.lex();
 			el = new ExprList();
-		//	Lexer.lex();
 		}
 	}
 }
@@ -487,11 +469,22 @@ class ExprList {
 class Code{
 	
 	public static void gen(String s) {
+		
 		ByteCode.code[ByteCode.codeptr] = s;
 		ByteCode.codeptr++;
 		
 		ByteCode.str_code[ByteCode.str_codeptr] = s;
 		ByteCode.str_codeptr++;
+		
+		if (s.contains("bipush")){
+			ByteCode.codeptr++;
+			ByteCode.str_codeptr++;
+		}
+		
+		if (s.contains("sipush")){
+			ByteCode.codeptr+=2;
+			ByteCode.str_codeptr+=2;
+		}
 	}
 	
 	
